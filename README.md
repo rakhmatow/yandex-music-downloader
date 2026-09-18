@@ -86,15 +86,28 @@ yandex-music-downloader --quality 1 --lyrics-format lrc --url "https://music.yan
 yandex-music-downloader --url "https://music.yandex.ru/album/11644078/track/6705392"
 ```
 
+### Предпочесть английскую локализацию
+```
+yandex-music-downloader --language en --url "https://music.yandex.com/album/21695850/track/22436"
+```
+
 При первом запуске любой из этих команд без `--token` откроется браузер
 для входа в аккаунт Яндекс.Музыки; при последующих запусках токен уже
 будет сохранён и повторно логиниться не потребуется. Во всех примерах,
 где нужен конкретный токен без сохранения на диск, замените `<Токен>` на
 ваш токен и добавьте `--token "<Токен>"`.
 
+### Язык ответов API
+
+По умолчанию используется `ru`, как и в клиенте `yandex-music`.
+Через `--language` можно передать язык, например `--language en`.
+Язык передаётся в заголовке `Accept-Language`;
+наличие перевода зависит от данных, которые возвращает
+Яндекс для конкретного релиза или трека.
+
 ## Использование
 ```
-usage: yandex-music-downloader [-h] [--quality <Качество>] [--skip-existing]
+usage: yandex-music-downloader [-h] [--language <Язык>] [--quality <Качество>] [--skip-existing]
                                [--remux-flac]
                                [--lyrics-format {none,text,lrc}]
                                [--embed-cover]
@@ -116,6 +129,7 @@ options:
   -h, --help            show this help message and exit
 
 Общие параметры:
+  --language <Язык>     Язык ответа API (по умолчанию: ru)
   --quality <Качество>  Качество трека:
                         0 - Низкое (AAC 64kbps)
                         1 - Оптимальное (AAC 192kbps)

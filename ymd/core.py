@@ -99,13 +99,17 @@ class AlbumCover:
 
 
 def init_client(
-    token: str, timeout: int, max_try_count: int, retry_delay: int
+    token: str,
+    timeout: int,
+    max_try_count: int,
+    retry_delay: int,
+    language: str = "ru",
 ) -> Client:
     assert timeout > 0
     assert max_try_count >= 0
     assert retry_delay >= 0
 
-    client = Client(token)
+    client = Client(token, language=language)
     client.request.set_timeout(timeout)
 
     original_wrapper = client.request._request_wrapper

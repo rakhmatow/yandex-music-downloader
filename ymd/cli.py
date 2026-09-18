@@ -25,6 +25,8 @@ PLAYLIST_RE = re.compile(r"playlists/(.+)$")
 
 FETCH_PAGE_SIZE = 10
 
+SUPPORTED_LANGUAGES = {"en", "uz", "uk", "us", "ru", "kk", "hy"}
+
 logger = logging.getLogger("yandex-music-downloader")
 
 
@@ -63,6 +65,20 @@ def lyrics_format_arg(astr: str) -> core.LyricsFormat:
         raise ArgumentTypeError(f"Допустимые значения: {','.join(core.LyricsFormat)}")
 
 
+def language_arg(astr: str) -> str:
+    language = astr.strip().lower()
+    if not language or "," in language:
+        raise ArgumentTypeError("Укажите ровно один язык")
+
+    if language not in SUPPORTED_LANGUAGES:
+        raise ArgumentTypeError(
+            f"Неподдерживаемый язык: {language}. "
+            + f". Допустимые значения: {','.join(sorted(SUPPORTED_LANGUAGES))}"
+        )
+
+    return language
+
+
 def get_artists(track: Track) -> str:
     return ", ".join(map(lambda x: x['name'],track.artists))
 
@@ -74,6 +90,15 @@ def main():
     )
 
     common_group = parser.add_argument_group("Общие параметры")
+    common_group.add_argument(
+        "--language",
+        default="ru",
+        metavar="<Язык>",
+        type=language_arg,
+        help=show_default(
+            "Язык ответа API"
+        ),
+    )
     common_group.add_argument(
         "--quality",
         metavar="<Качество>",
@@ -274,6 +299,7 @@ def main():
             timeout=args.timeout,
             max_try_count=args.tries,
             retry_delay=args.retry_delay,
+            language=args.language,
         )
 
     try:
