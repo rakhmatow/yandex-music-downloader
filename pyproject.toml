@@ -15,7 +15,8 @@ dependencies = [
     "yandex-music>=3.0.0",
     "mutagen>=1.47.0",
     "StrEnum",
-    "pycryptodome"
+    "pycryptodome",
+    "requests"
 ]
 
 [project.scripts]

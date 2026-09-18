@@ -44,25 +44,47 @@ yandex-music-downloader --help
 ```
 
 ## Получение данных для авторизации
+Если запустить программу без `--token`, она сама откроет страницу Яндекса для входа,
+дождётся подтверждения и сохранит токен (вместе с refresh-токеном и
+остальными метаданными) в файл - по умолчанию
+`~/.config/yandex-music-downloader/token.json`
+(`%APPDATA%\yandex-music-downloader\token.json` на Windows).
+При следующих запусках программа читает сохранённый токен
+и, если он истёк, обновляет его автоматически по refresh-токену. Если
+refresh-токен тоже оказался недействителен,
+программа снова предложит войти через браузер - то есть
+достаточно просто запустить команду и один раз нажать "разрешить" в
+браузере, дальше всё работает само.
+
+Чтобы принудительно перелогиниться, используйте `--relogin`. Файл токена
+можно сменить флагом `--token-file`.
+
+Если по какой-то причине автоматический способ не подходит, токен
+по-прежнему можно получить вручную и передать через `--token`:
 https://ym.marshal.dev/token/#implicit-oauth
 
 ## Примеры использования
-Во всех примерах замените `<Токен>` на ваш токен.
 
 ### Скачать все треки [Arctic Monkeys](https://music.yandex.ru/artist/208167) в наилучшем качестве
 ```
-yandex-music-downloader --token "<Токен>" --quality 2 --url "https://music.yandex.ru/artist/208167"
+yandex-music-downloader --quality 2 --url "https://music.yandex.ru/artist/208167"
 ```
 
 ### Скачать альбом [Nevermind](https://music.yandex.ru/album/294912) в высоком качестве, загружая тексты песен в формате LRC (с временными метками)
 ```
-yandex-music-downloader --token "<Токен>" --quality 1 --lyrics-format lrc --url "https://music.yandex.ru/album/294912"
+yandex-music-downloader --quality 1 --lyrics-format lrc --url "https://music.yandex.ru/album/294912"
 ```
 
 ### Скачать трек [Seven Nation Army](https://music.yandex.ru/album/11644078/track/6705392)
 ```
-yandex-music-downloader --token "<Токен>" --url "https://music.yandex.ru/album/11644078/track/6705392"
+yandex-music-downloader --url "https://music.yandex.ru/album/11644078/track/6705392"
 ```
+
+При первом запуске любой из этих команд без `--token` откроется браузер
+для входа в аккаунт Яндекс.Музыки; при последующих запусках токен уже
+будет сохранён и повторно логиниться не потребуется. Во всех примерах,
+где нужен конкретный токен без сохранения на диск, замените `<Токен>` на
+ваш токен и добавьте `--token "<Токен>"`.
 
 ## Использование
 ```
@@ -78,7 +100,8 @@ usage: yandex-music-downloader [-h] [--quality <Качество>] [--skip-exist
                                [--retry-delay <Задержка>]
                                (--artist-id <ID исполнителя> | --album-id <ID альбома> | --track-id <ID трека> | --playlist-id <владелец плейлиста>/<тип плейлиста> | -u URL)
                                [--unsafe-path] [--dir <Папка>]
-                               [--path-pattern <Паттерн>] --token <Токен>
+                               [--path-pattern <Паттерн>] [--token <Токен>]
+                               [--token-file <Путь>] [--relogin]
 
 Загрузчик музыки с сервиса Яндекс.Музыка
 
@@ -125,7 +148,9 @@ ID:
                         Поддерживает следующие заполнители: #number, #track-artist, #album-artist, #title, #album, #year, #artist-id, #album-id, #track-id, #number-padded (по умолчанию: #album-artist/#album/#number - #title)
 
 Авторизация:
-  --token <Токен>       Токен для авторизации. См. README для способов получения
+  --token <Токен>       Токен для авторизации. Если не указан, будет автоматически получен через Device Flow (и сохранён для последующих запусков). Подробнее и альтернативные способы: https://ym.marshal.dev/token/
+  --token-file <Путь>   Файл для автоматического сохранения/чтения токена и его метаданных (по умолчанию: ~/.config/yandex-music-downloader/token.json)
+  --relogin             Игнорировать сохранённый токен и выполнить повторный вход
 ```
 
 ## Уровни совместимости

@@ -11,8 +11,9 @@ from typing import Optional, Union
 from urllib.parse import urlparse
 
 from yandex_music import Album, Track
+from yandex_music.exceptions import DeviceAuthError, UnauthorizedError
 
-from ymd import core
+from ymd import auth, core
 
 DEFAULT_DELAY = 0
 
@@ -200,9 +201,25 @@ def main():
     auth_group = parser.add_argument_group("Авторизация")
     auth_group.add_argument(
         "--token",
-        required=True,
+        default=None,
         metavar="<Токен>",
-        help="Токен для авторизации. См. README для способов получения",
+        help="Токен для авторизации. Если не указан, будет автоматически"
+        " получен через Device Flow (и сохранён для последующих запусков)."
+        f" Подробнее и альтернативные способы: {auth.TOKEN_HELP_URL}",
+    )
+    auth_group.add_argument(
+        "--token-file",
+        default=auth.default_token_file(),
+        metavar="<Путь>",
+        type=Path,
+        help=show_default(
+            "Файл для автоматического сохранения/чтения токена и его метаданных"
+        ),
+    )
+    auth_group.add_argument(
+        "--relogin",
+        action="store_true",
+        help="Игнорировать сохранённый токен и выполнить повторный вход",
     )
 
     args = parser.parse_args()
@@ -234,12 +251,37 @@ def main():
             print("Параметер url указан в неверном формате")
             return 1
 
-    client = core.init_client(
-        token=args.token,
-        timeout=args.timeout,
-        max_try_count=args.tries,
-        retry_delay=args.retry_delay,
-    )
+    explicit_token = args.token is not None
+    try:
+        token = args.token or auth.get_access_token(
+            args.token_file, relogin=args.relogin
+        )
+    except DeviceAuthError as e:
+        print(f"Ошибка авторизации: {e}")
+        return 1
+
+    def make_client():
+        return core.init_client(
+            token=token,
+            timeout=args.timeout,
+            max_try_count=args.tries,
+            retry_delay=args.retry_delay,
+        )
+
+    try:
+        client = make_client()
+    except UnauthorizedError:
+        if explicit_token:
+            print("Указанный токен недействителен")
+            return 1
+        print("Сохранённый токен недействителен, требуется повторный вход")
+        try:
+            token = auth.get_access_token(args.token_file, relogin=True)
+        except DeviceAuthError as e:
+            print(f"Ошибка авторизации: {e}")
+            return 1
+        client = make_client()
+
     result_tracks: Iterable[Track]
 
     def album_tracks_gen(album_ids: Iterable[Union[int, str]]) -> Generator[Track]:
